@@ -605,7 +605,8 @@ const PROJECTS=[
     impact:"Autonomous locomotion in simulation",
     stack:["ROS2 Humble","Gymnasium","Stable Baselines","Python"],
     techStack:["ROS2 Humble","Gymnasium","Stable Baselines","Python"],
-    image:"/images/hexapod.svg",
+    image:"/images/hexapod.png",
+    video:"/videos/hexapod.mp4",
     githubUrl:"https://github.com/dureadansaeed/hexapod-robot-control",
     demoUrl:"",
     icon:"arm",grad:"linear-gradient(135deg,rgba(109,40,217,.14),rgba(29,78,216,.07))",ac:"#a78bfa",size:"md:col-span-2"},
@@ -614,7 +615,8 @@ const PROJECTS=[
     impact:"Shipped — auth, notifications, the lot",
     stack:["React","Flask","MongoDB","JWT","Bcrypt"],
     techStack:["React","Flask","MongoDB","JWT","Bcrypt"],
-    image:"/images/planora.svg",
+    image:"/images/planora.png",
+    video:"/videos/planora.mp4",
     githubUrl:"https://github.com/dureadansaeed/planora",
     demoUrl:"https://planora.example.com",
     icon:"calendar",grad:"linear-gradient(135deg,rgba(29,78,216,.14),rgba(6,182,212,.07))",ac:"#60a5fa",size:"md:col-span-1"},
@@ -623,7 +625,7 @@ const PROJECTS=[
     impact:"Real gesture → real robot motion",
     stack:["ROS1 Noetic","Python","OpenCV"],
     techStack:["ROS1 Noetic","Python","OpenCV"],
-    image:"/images/blind-assist.svg",
+    image:"/images/blind-assist.png",
     githubUrl:"",
     demoUrl:"",
     icon:"hand",grad:"linear-gradient(135deg,rgba(6,182,212,.12),rgba(29,78,216,.07))",ac:"#67e8f9",size:"md:col-span-1"},
@@ -632,7 +634,8 @@ const PROJECTS=[
     impact:"Grounded answers over hallucinated ones",
     stack:["Python","Streamlit","FAISS","Gemini API","Sentence-Transformers"],
     techStack:["Python","Streamlit","FAISS","Gemini API","Sentence-Transformers"],
-    image:"/images/campus-companion.svg",
+    image:"/images/campus-companion.png",
+    video:"/videos/campus-companion.mp4",
     githubUrl:"https://github.com/dureadansaeed/campus-companion-ai",
     demoUrl:"",
     icon:"cpu",grad:"linear-gradient(135deg,rgba(139,92,246,.14),rgba(6,182,212,.08))",ac:"#a78bfa",size:"md:col-span-2"},
@@ -673,17 +676,31 @@ const Projects=({setWarp})=>{
               aria-controls={`project-panel-${p.id}`}
               whileHover={{scale:1.02}}>
               <div className="absolute inset-0 z-0">
-                <img
-                  src={p.image}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  width="1280"
-                  height="720"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="h-full w-full object-cover opacity-35"
-                  style={{willChange:"transform"}}
-                />
+                {p.video ? (
+                  <video
+                    src={p.video}
+                    poster={p.image}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full object-cover opacity-35"
+                    style={{willChange:"transform"}}
+                  />
+                ) : (
+                  <img
+                    src={p.image}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width="1280"
+                    height="720"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="h-full w-full object-cover opacity-35"
+                    style={{willChange:"transform"}}
+                  />
+                )}
                 <div className="absolute inset-0" style={{background:"linear-gradient(180deg,rgba(3,8,20,.15) 0%,rgba(3,8,20,.55) 100%)"}} />
               </div>
               <div className="relative z-10 p-6 md:p-7 h-full flex flex-col justify-between" style={{minHeight:260}}>
