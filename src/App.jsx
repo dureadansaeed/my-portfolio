@@ -930,6 +930,119 @@ const Philosophy=({setWarp})=>{
 /* ═══════════════════════════════════════════════════════════════
    ⑦ CONTACT — HOME BASE
 ═══════════════════════════════════════════════════════════════ */
+const initialFormState={name:"",email:"",subject:"",message:""};
+
+const ContactForm=()=>{
+  const [values,setValues]=useState(initialFormState);
+  const [errors,setErrors]=useState({});
+  const [isSubmitting,setIsSubmitting]=useState(false);
+  const [submitStatus,setSubmitStatus]=useState(null);
+
+  const handleChange=(e)=>{
+    const {name,value}=e.target;
+    setValues(prev=>({...prev,[name]:value}));
+    if(errors[name]){
+      setErrors(prev=>({...prev,[name]:""}));
+    }
+    if(submitStatus){
+      setSubmitStatus(null);
+    }
+  };
+
+  const validateForm=()=>{
+    const nextErrors={};
+    if(!values.name.trim()) nextErrors.name="Full name is required.";
+    if(!values.email.trim()) nextErrors.email="Email address is required.";
+    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) nextErrors.email="Please enter a valid email address.";
+    if(!values.subject.trim()) nextErrors.subject="Subject is required.";
+    if(!values.message.trim()) nextErrors.message="Message is required.";
+    return nextErrors;
+  };
+
+  const handleSubmit=async(e)=>{
+    e.preventDefault();
+    const nextErrors=validateForm();
+    setErrors(nextErrors);
+    if(Object.keys(nextErrors).length){
+      setSubmitStatus({type:"error",message:"Please correct the highlighted fields and try again."});
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try{
+      const accessKey=import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+      if(!accessKey){
+        throw new Error("Web3Forms access key is missing. Please add VITE_WEB3FORMS_ACCESS_KEY to your environment.");
+      }
+
+      const response=await fetch("https://api.web3forms.com/submit",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Accept":"application/json"},
+        body:JSON.stringify({
+          access_key:accessKey,
+          name:values.name.trim(),
+          email:values.email.trim(),
+          subject:values.subject.trim(),
+          message:`Name: ${values.name.trim()}\nEmail: ${values.email.trim()}\nSubject: ${values.subject.trim()}\n\nMessage:\n${values.message.trim()}`,
+          from_name:values.name.trim(),
+          replyto:values.email.trim(),
+          to:"dureadan.wahid@gmail.com",
+        }),
+      });
+
+      const result=await response.json();
+      if(!response.ok || !result.success){
+        throw new Error(result.message || "Unable to send your message right now. Please try again.");
+      }
+
+      setValues(initialFormState);
+      setSubmitStatus({type:"success",message:"Thanks! Your message was sent successfully."});
+    }catch(error){
+      setSubmitStatus({type:"error",message:error.message || "Unable to send your message right now. Please try again."});
+    }finally{
+      setIsSubmitting(false);
+    }
+  };
+
+  return(
+    <form onSubmit={handleSubmit} noValidate className="space-y-4" aria-label="Contact form">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label htmlFor="contact-name" className="mb-2 block text-[10px] tracking-[.16em] uppercase text-white/70">Full Name</label>
+          <input id="contact-name" name="name" value={values.name} onChange={handleChange} aria-invalid={!!errors.name} aria-describedby={errors.name?"name-error":""} required className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-white/40" placeholder="Your name" />
+          {errors.name && <p id="name-error" role="alert" className="mt-2 text-[11px] uppercase tracking-[.16em] text-rose-300/90">{errors.name}</p>}
+        </div>
+        <div>
+          <label htmlFor="contact-email" className="mb-2 block text-[10px] tracking-[.16em] uppercase text-white/70">Email Address</label>
+          <input id="contact-email" type="email" name="email" value={values.email} onChange={handleChange} aria-invalid={!!errors.email} aria-describedby={errors.email?"email-error":""} required className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-white/40" placeholder="you@example.com" />
+          {errors.email && <p id="email-error" role="alert" className="mt-2 text-[11px] uppercase tracking-[.16em] text-rose-300/90">{errors.email}</p>}
+        </div>
+      </div>
+      <div>
+        <label htmlFor="contact-subject" className="mb-2 block text-[10px] tracking-[.16em] uppercase text-white/70">Subject</label>
+        <input id="contact-subject" name="subject" value={values.subject} onChange={handleChange} aria-invalid={!!errors.subject} aria-describedby={errors.subject?"subject-error":""} required className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-white/40" placeholder="What would you like to discuss?" />
+        {errors.subject && <p id="subject-error" role="alert" className="mt-2 text-[11px] uppercase tracking-[.16em] text-rose-300/90">{errors.subject}</p>}
+      </div>
+      <div>
+        <label htmlFor="contact-message" className="mb-2 block text-[10px] tracking-[.16em] uppercase text-white/70">Message</label>
+        <textarea id="contact-message" name="message" rows="6" value={values.message} onChange={handleChange} aria-invalid={!!errors.message} aria-describedby={errors.message?"message-error":""} required className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-white/40" placeholder="Share your thoughts, suggestions, or feedback..." />
+        {errors.message && <p id="message-error" role="alert" className="mt-2 text-[11px] uppercase tracking-[.16em] text-rose-300/90">{errors.message}</p>}
+      </div>
+      {submitStatus && (
+        <div role="status" className={`rounded-xl border px-4 py-3 text-sm ${submitStatus.type === "success" ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200" : "border-rose-400/30 bg-rose-500/10 text-rose-200"}`}>
+          {submitStatus.message}
+        </div>
+      )}
+      <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center gap-3 px-6 py-3.5 text-sm tracking-[.15em] uppercase font-medium text-white rounded-xl transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70" style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}>
+        <Icon name="mail" size={15} color="rgba(255,255,255,.8)"/>
+        <span>{isSubmitting ? "Sending..." : "Send Feedback"}</span>
+      </button>
+    </form>
+  );
+};
+
 const Contact=({setWarp})=>{
   const [ref,inView]=useReveal();
   const [ambientRef,ambientInView]=useSectionVisibility(.1);
@@ -963,23 +1076,13 @@ const Contact=({setWarp})=>{
         <motion.div custom={3} variants={fU} initial="h" animate={inView?"v":"h"}
           className="glass2 rounded-2xl p-6 md:p-8 mb-8 max-w-2xl mx-auto"
           style={{border:"1px solid rgba(255,255,255,.07)"}}>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-left">
-              <div className="fd font-700 text-base text-white mb-2">Share Your Feedback</div>
-              <p className="text-sm leading-relaxed" style={{color:"rgba(255,255,255,.72)"}}>
-                Suggestions, issue reports, and constructive feedback are always welcome. I’d love to hear what stood out and what could be improved.
-              </p>
-            </div>
-            <a
-              href="mailto:dureadan.wahid@gmail.com?subject=Portfolio%20Feedback&body=Hello%20Dur%20E%20Adan%2C%0A%0AI%20visited%20your%20portfolio%20and%20would%20like%20to%20share%20the%20following%20feedback%3A%0A%0A-------------------------------------------------%0A"
-              className="inline-flex items-center gap-3 px-6 py-3.5 text-sm tracking-[.15em] uppercase font-medium text-white rounded-xl transition-all duration-300"
-              style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}
-              aria-label="Send feedback via email"
-            >
-              <Icon name="mail" size={15} color="rgba(255,255,255,.8)"/>
-              <span>Send Feedback</span>
-            </a>
+          <div className="text-left mb-6">
+            <div className="fd font-700 text-base text-white mb-2">Share Your Feedback</div>
+            <p className="text-sm leading-relaxed" style={{color:"rgba(255,255,255,.72)"}}>
+              Suggestions, issue reports, and constructive feedback are always welcome. I’d love to hear what stood out and what could be improved.
+            </p>
           </div>
+          <ContactForm />
         </motion.div>
 
         <motion.div custom={4} variants={fU} initial="h" animate={inView?"v":"h"} className="grid sm:grid-cols-3 gap-3 mb-10 max-w-xl mx-auto">
