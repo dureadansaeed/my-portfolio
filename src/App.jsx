@@ -129,6 +129,23 @@ const GlobalStyles = () => (
     .glass2{background:rgba(255,255,255,.06);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,.1)}
     .gt{background:linear-gradient(100deg,#a78bfa,#60a5fa,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
+    a, button, [role="button"], [role="link"], [tabindex]:not([tabindex="-1"]){outline:none}
+    a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [role="link"]:focus-visible, [tabindex]:not([tabindex="-1"]):focus-visible{
+      outline:2px solid rgba(103,232,249,.95);
+      outline-offset:3px;
+      box-shadow:0 0 0 4px rgba(109,40,217,.22);
+      border-radius:999px;
+    }
+    .skip-link{position:absolute;left:1rem;top:-3rem;z-index:300;display:inline-flex;align-items:center;justify-content:center;padding:.8rem 1rem;border-radius:999px;background:rgba(109,40,217,.95);color:#fff;text-decoration:none;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;transition:top .2s ease,box-shadow .2s ease}
+    .skip-link:focus{top:1rem;box-shadow:0 0 0 4px rgba(103,232,249,.25)}
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .star, .norb, .wstreak, .rush-star, .pulse-glow { animation: none !important; }
+      .star { opacity: .35 !important; }
+      .norb { transform: none !important; }
+    }
+
     @keyframes twinkle    {0%,100%{opacity:.1;transform:scale(1)}50%{opacity:1;transform:scale(1.7)}}
     @keyframes ndrift     {0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(24px,-16px) scale(1.04)}66%{transform:translate(-16px,12px) scale(.97)}}
     @keyframes spin-cw    {from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
@@ -214,13 +231,26 @@ const useWarpOnEnter=(dest,setWarp)=>{
    SHARED UTILS
 ═══════════════════════════════════════════════════════════════ */
 const useReveal=(amt=.12)=>{const ref=useRef(null);const inView=useInView(ref,{once:true,amount:amt});return[ref,inView]};
+const useReducedMotion=()=>{
+  const [prefersReducedMotion,setPrefersReducedMotion]=useState(false);
+  useEffect(()=>{
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mediaQuery=window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update=()=>setPrefersReducedMotion(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener?.("change",update);
+    return ()=>mediaQuery.removeEventListener?.("change",update);
+  },[]);
+  return prefersReducedMotion;
+};
+const useSectionVisibility=(amt=.1)=>{const ref=useRef(null);const inView=useInView(ref,{once:false,amount:amt});return[ref,inView]};
 const fU={h:{opacity:0,y:50},v:(i=0)=>({opacity:1,y:0,transition:{duration:.8,delay:i*.08,ease:[.16,1,.3,1]}})};
 const fS={h:{opacity:0,scale:.9},v:(i=0)=>({opacity:1,scale:1,transition:{duration:.7,delay:i*.07,ease:[.16,1,.3,1]}})};
 
 const SLabel=({text})=>(
   <div className="inline-flex items-center gap-2 glass rounded-full px-3 py-1.5 mb-5" style={{border:"1px solid rgba(139,92,246,.2)"}}>
     <div className="w-1.5 h-1.5 rounded-full bg-violet-400" style={{boxShadow:"0 0 5px rgba(167,139,250,1)"}}/>
-    <span className="text-[10px] tracking-[.25em] uppercase text-violet-300/60">{text}</span>
+    <span className="text-[10px] tracking-[.25em] uppercase text-violet-300/80">{text}</span>
   </div>
 );
 const SHead=({label,line1,accent,inView})=>(
@@ -248,9 +278,9 @@ const CockpitDivider=({from,to})=>{
       <motion.div initial={{opacity:0,scale:.92}} animate={inView?{opacity:1,scale:1}:{}} transition={{duration:.5,delay:.1}}
         className="relative z-10 glass2 rounded-2xl px-8 py-4 flex flex-col items-center gap-2" style={{border:"1px solid rgba(139,92,246,.22)",minWidth:260}}>
         <motion.div className="absolute top-0 left-0 right-0 h-px" style={{background:"linear-gradient(90deg,transparent,rgba(139,92,246,.6),transparent)"}} animate={inView?{scaleX:[0,1]}:{}} transition={{duration:.5,delay:.2}}/>
-        <div className="fd text-[8px] tracking-[.4em] uppercase text-violet-400/35 mb-1">// NAV SYSTEM //</div>
+        <div className="fd text-[8px] tracking-[.4em] uppercase text-violet-400/80 mb-1">// NAV SYSTEM //</div>
         <div className="flex items-center gap-4">
-          <div className="text-right"><div className="text-[8px] tracking-[.2em] uppercase text-white/18 mb-0.5">Departing</div><div className="fd font-600 text-xs text-white/45">{from}</div></div>
+          <div className="text-right"><div className="text-[8px] tracking-[.2em] uppercase text-white/70 mb-0.5">Departing</div><div className="fd font-600 text-xs text-white/75">{from}</div></div>
           <div className="flex items-center gap-0.5 px-2">
             {[0,1,2,3].map(i=>(
               <motion.div key={i} animate={inView?{opacity:[0,1,0]}:{}} transition={{duration:.5,delay:.3+i*.08,repeat:Infinity,repeatDelay:.9}}
@@ -259,7 +289,7 @@ const CockpitDivider=({from,to})=>{
             <motion.span animate={inView?{x:[0,4,0]}:{}} transition={{duration:.5,delay:.3,repeat:Infinity,repeatDelay:.9}}
               className="fd font-700 text-sm ml-1" style={{color:"rgba(167,139,250,.9)"}}>›</motion.span>
           </div>
-          <div><div className="text-[8px] tracking-[.2em] uppercase text-violet-400/35 mb-0.5">Arriving</div><div className="fd font-700 text-xs gt">{to}</div></div>
+          <div><div className="text-[8px] tracking-[.2em] uppercase text-violet-400/80 mb-0.5">Arriving</div><div className="fd font-700 text-xs gt">{to}</div></div>
         </div>
         <div className="w-full h-px mt-1" style={{background:"rgba(255,255,255,.05)"}}>
           <motion.div className="h-full origin-left" initial={{scaleX:0}} animate={inView?{scaleX:1}:{}} transition={{duration:.7,delay:.25,ease:"easeInOut"}} style={{background:"linear-gradient(90deg,#6d28d9,#2563eb,#67e8f9)"}}/>
@@ -273,26 +303,32 @@ const CockpitDivider=({from,to})=>{
 /* ═══════════════════════════════════════════════════════════════
    ① HERO
 ═══════════════════════════════════════════════════════════════ */
-const ROLES=["AI Engineer","Robotics Builder","4× Gold Medalist","Full-Stack Dev"];
+const ROLES=["Agentic AI & ML Engineer","Robotics Builder","4× Gold Medalist","Full-Stack Dev"];
 const Hero=({setWarp})=>{
   const {scrollY}=useScroll();
   const yP=useTransform(scrollY,[0,800],[0,180]);
   const opP=useTransform(scrollY,[0,500],[1,0]);
   const [ri,setRi]=useState(0);
+  const prefersReducedMotion=useReducedMotion();
+  const [ambientRef,ambientInView]=useSectionVisibility(.1);
   useEffect(()=>{const t=setInterval(()=>setRi(i=>(i+1)%ROLES.length),3000);return()=>clearInterval(t)},[]);
 
   return(
     <section id="hero" className="relative min-h-screen flex flex-col justify-center px-8 md:px-20 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="norb" style={{top:"-12%",left:"-8%",width:700,height:700,"--nd":"16s",background:"radial-gradient(circle,rgba(109,40,217,.45) 0%,rgba(109,40,217,.04) 55%,transparent 72%)"}}/>
-        <div className="norb" style={{top:"30%",right:"-15%",width:600,height:600,"--nd":"20s","--ndl":"4s",background:"radial-gradient(circle,rgba(29,78,216,.5) 0%,rgba(29,78,216,.04) 55%,transparent 72%)"}}/>
-        <div className="norb" style={{bottom:"-5%",left:"20%",width:800,height:800,"--nd":"24s","--ndl":"8s",background:"radial-gradient(circle,rgba(147,51,234,.22) 0%,rgba(79,70,229,.03) 55%,transparent 70%)"}}/>
+      <div ref={ambientRef} className="absolute inset-0 pointer-events-none">
+        {(ambientInView || !ambientRef.current) && (
+          <>
+            <div className="norb" style={{top:"-12%",left:"-8%",width:700,height:700,"--nd":"16s",background:"radial-gradient(circle,rgba(109,40,217,.45) 0%,rgba(109,40,217,.04) 55%,transparent 72%)",animation:prefersReducedMotion?"none":"ndrift 16s ease-in-out infinite"}}/>
+            <div className="norb" style={{top:"30%",right:"-15%",width:600,height:600,"--nd":"20s","--ndl":"4s",background:"radial-gradient(circle,rgba(29,78,216,.5) 0%,rgba(29,78,216,.04) 55%,transparent 72%)",animation:prefersReducedMotion?"none":"ndrift 20s ease-in-out infinite"}}/>
+            <div className="norb" style={{bottom:"-5%",left:"20%",width:800,height:800,"--nd":"24s","--ndl":"8s",background:"radial-gradient(circle,rgba(147,51,234,.22) 0%,rgba(79,70,229,.03) 55%,transparent 70%)",animation:prefersReducedMotion?"none":"ndrift 24s ease-in-out infinite"}}/>
+          </>
+        )}
       </div>
 
       {/* Entry streaks */}
       <motion.div className="absolute inset-0 pointer-events-none" initial={{opacity:1}} animate={{opacity:0}} transition={{duration:1.1,delay:.5}}>
-        {Array.from({length:45},(_,i)=>(
-          <div key={i} className="absolute h-px" style={{top:`${Math.random()*100}%`,left:0,width:`${Math.random()*55+15}%`,
+        {Array.from({length:18},(_,i)=>(
+          <div key={i} className="absolute h-px" style={{top:`${Math.random()*100}%`,left:0,width:`${Math.random()*44+16}%`,
             background:`linear-gradient(90deg,transparent,${i%3===0?"rgba(167,139,250,.85)":i%3===1?"rgba(96,165,250,.75)":"rgba(255,255,255,.5)"},transparent)`,
             animation:`warp-streak ${.25+Math.random()*.4}s ease-out forwards`,animationDelay:`${Math.random()*.35}s`}}/>
         ))}
@@ -301,11 +337,11 @@ const Hero=({setWarp})=>{
       <motion.div style={{y:yP,opacity:opP}} className="relative z-10 max-w-7xl mx-auto w-full pt-20">
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:.8,duration:.7}}
           className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-10" style={{border:"1px solid rgba(139,92,246,.2)"}}>
-          <div className="w-1.5 h-1.5 rounded-full" style={{background:"#67e8f9",boxShadow:"0 0 6px #67e8f9",animation:"pulse-glow 1.5s infinite"}}/>
-          <span className="text-xs tracking-[.22em] uppercase text-white/35">NUCES FAST · Islamabad · 4× Gold Medalist</span>
+          <div className="pulse-glow w-1.5 h-1.5 rounded-full" style={{background:"#67e8f9",boxShadow:"0 0 6px #67e8f9"}}/>
+          <span className="text-xs tracking-[.22em] uppercase text-white/70">NUCES FAST · Islamabad · 4× Gold Medalist</span>
         </motion.div>
 
-        <div className="overflow-hidden mb-3">
+        <h1 className="overflow-hidden mb-3">
           <motion.div className="flex flex-wrap" initial="h" animate="v" variants={{v:{transition:{staggerChildren:.05,delayChildren:.9}}}}>
             {"Dur E Adan".split("").map((ch,i)=>(
               <motion.span key={i} variants={{h:{y:100,opacity:0,filter:"blur(10px)"},v:{y:0,opacity:1,filter:"blur(0px)",transition:{duration:.8,ease:[.16,1,.3,1]}}}}
@@ -315,7 +351,7 @@ const Hero=({setWarp})=>{
               </motion.span>
             ))}
           </motion.div>
-        </div>
+        </h1>
 
         <div className="flex items-center gap-4 mb-8">
           <motion.div initial={{scaleX:0}} animate={{scaleX:1}} transition={{delay:1.6,duration:.8,ease:[.16,1,.3,1]}} className="h-px w-14 origin-left" style={{background:"linear-gradient(90deg,#7c3aed,#2563eb)"}}/>
@@ -328,7 +364,7 @@ const Hero=({setWarp})=>{
         </div>
 
         <motion.p initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:1.2,duration:.7}}
-          className="text-base md:text-lg font-light mb-10 max-w-lg leading-relaxed" style={{color:"rgba(255,255,255,.38)"}}>
+          className="text-base md:text-lg font-light mb-10 max-w-lg leading-relaxed" style={{color:"rgba(255,255,255,.72)"}}>
           I study AI at NUCES FAST and spend most of my time actually building things — robots that walk, agents that learn, and web apps that ship.
         </motion.p>
 
@@ -347,26 +383,37 @@ const Hero=({setWarp})=>{
                 <Icon name={s.icon} size={18} color="rgba(167,139,250,.7)"/>
               </div>
               <div className="fd font-700 text-xl text-white">{s.n}</div>
-              <div className="text-[10px] tracking-[.15em] uppercase text-white/25 mt-0.5">{s.l}</div>
+              <div className="text-[10px] tracking-[.15em] uppercase text-white/70 mt-0.5">{s.l}</div>
             </motion.div>
           ))}
         </div>
 
-        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:1.6,duration:.7}} className="flex gap-4">
-          <motion.a href="#work" whileHover={{scale:1.03}} whileTap={{scale:.97}}
+        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:1.6,duration:.7}} className="flex flex-wrap gap-4">
+          <motion.a href="#work" whileHover={{scale:1.03}} whileTap={{scale:.97}} aria-label="View my projects"
             className="inline-flex items-center gap-3 px-7 py-3.5 text-sm tracking-[.12em] uppercase font-medium text-white rounded-xl"
             style={{background:"linear-gradient(135deg,rgba(109,40,217,.85),rgba(29,78,216,.85))",border:"1px solid rgba(139,92,246,.4)",backdropFilter:"blur(20px)"}}>
-            Launch Mission
+            <span className="sr-only">View my projects</span>
+            <span>Launch Mission</span>
             <motion.span animate={{x:[0,5,0]}} transition={{repeat:Infinity,duration:1.8}}>→</motion.span>
           </motion.a>
-          <motion.a href="#about" whileHover={{scale:1.02}} className="glass inline-flex items-center px-7 py-3.5 text-sm tracking-[.12em] uppercase rounded-xl text-white/42 hover:text-white/75 transition-colors duration-300">
-            My Universe
+          <motion.a href="#about" whileHover={{scale:1.02}} aria-label="Learn more about me" className="glass inline-flex items-center px-7 py-3.5 text-sm tracking-[.12em] uppercase rounded-xl text-white/70 hover:text-white/90 transition-colors duration-300">
+            <span className="sr-only">Learn more about me</span>
+            <span>My Universe</span>
+          </motion.a>
+          <motion.a href="/resume.pdf" target="_blank" rel="noopener noreferrer" whileHover={{scale:1.02}} aria-label="View resume in new tab"
+            className="inline-flex items-center gap-3 px-7 py-3.5 text-sm tracking-[.12em] uppercase font-medium text-white rounded-xl"
+            style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}>
+            <span>View Resume</span>
+          </motion.a>
+          <motion.a href="/resume.pdf" download="resume.pdf" whileHover={{scale:1.02}} aria-label="Download resume PDF"
+            className="glass inline-flex items-center px-7 py-3.5 text-sm tracking-[.12em] uppercase rounded-xl text-white/70 hover:text-white/90 transition-colors duration-300">
+            <span>Download Resume</span>
           </motion.a>
         </motion.div>
       </motion.div>
 
       <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:2.2}} className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10">
-        <span className="text-[9px] tracking-[.3em] uppercase text-white/14">Nebula Cloud ahead</span>
+        <span className="text-[9px] tracking-[.3em] uppercase text-white/70">Nebula Cloud ahead</span>
         <motion.div animate={{y:[0,10,0]}} transition={{repeat:Infinity,duration:2,ease:"easeInOut"}} className="w-px h-8" style={{background:"linear-gradient(180deg,rgba(139,92,246,.8),transparent)"}}/>
       </motion.div>
     </section>
@@ -378,6 +425,8 @@ const Hero=({setWarp})=>{
 ═══════════════════════════════════════════════════════════════ */
 const About=({setWarp})=>{
   const [ref,inView]=useReveal();
+  const [ambientRef,ambientInView]=useSectionVisibility(.1);
+  const prefersReducedMotion=useReducedMotion();
   const warpRef=useWarpOnEnter("Nebula Cloud",setWarp);
   const HIGHLIGHTS=[
     {icon:"zap",   stat:"End-to-End Builder",  sub:"Simulation to production, start to finish"},
@@ -388,17 +437,30 @@ const About=({setWarp})=>{
     <>
     <CockpitDivider from="Deep Space" to="Nebula Cloud"/>
     <section id="about" ref={warpRef} className="relative py-28 md:py-36 px-8 md:px-20 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="norb" style={{top:"5%",left:"45%",width:600,height:600,"--nd":"18s",background:"radial-gradient(circle,rgba(139,92,246,.16) 0%,rgba(109,40,217,.04) 52%,transparent 70%)"}}/>
-        <div className="norb" style={{bottom:"0%",right:"5%",width:400,height:400,"--nd":"13s","--ndl":"3s",background:"radial-gradient(circle,rgba(109,40,217,.18) 0%,transparent 65%)"}}/>
+      <div ref={ambientRef} className="absolute inset-0 pointer-events-none">
+        {(ambientInView || !ambientRef.current) && (
+          <>
+            <div className="norb" style={{top:"5%",left:"45%",width:600,height:600,"--nd":"18s",background:"radial-gradient(circle,rgba(139,92,246,.16) 0%,rgba(109,40,217,.04) 52%,transparent 70%)",animation:prefersReducedMotion?"none":"ndrift 18s ease-in-out infinite"}}/>
+            <div className="norb" style={{bottom:"0%",right:"5%",width:400,height:400,"--nd":"13s","--ndl":"3s",background:"radial-gradient(circle,rgba(109,40,217,.18) 0%,transparent 65%)",animation:prefersReducedMotion?"none":"ndrift 13s ease-in-out infinite"}}/>
+          </>
+        )}
       </div>
       <div ref={ref} className="max-w-6xl mx-auto relative z-10">
         <SHead label="Nebula Cloud · About" line1="The Mind" accent="Behind the Code" inView={inView}/>
 
         <motion.p variants={fU} custom={1} initial="h" animate={inView?"v":"h"}
-          className="text-base md:text-lg font-light mb-10 max-w-xl leading-relaxed" style={{color:"rgba(255,255,255,.45)"}}>
+          className="text-base md:text-lg font-light mb-8 max-w-xl leading-relaxed" style={{color:"rgba(255,255,255,.72)"}}>
           First-year AI student at NUCES FAST Islamabad. I spend my free time breaking robots in Gazebo, training agents that mostly do the wrong thing, and occasionally shipping something that actually works.
         </motion.p>
+
+        <motion.div variants={fU} custom={2} initial="h" animate={inView?"v":"h"} className="flex flex-wrap gap-3 mb-10">
+          {[
+            "4× Gold Medalist — Academic Excellence",
+            "AI & Robotics Certificate — NUCES FAST"
+          ].map(item=>(
+            <span key={item} className="glass rounded-full px-3 py-1.5 text-[10px] tracking-[.16em] uppercase text-white/75" style={{border:"1px solid rgba(255,255,255,.06)"}}>{item}</span>
+          ))}
+        </motion.div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-10">
           {HIGHLIGHTS.map((h,i)=>(
@@ -411,7 +473,7 @@ const About=({setWarp})=>{
               </div>
               <div>
                 <div className="fd font-700 text-base text-white mb-1">{h.stat}</div>
-                <div className="text-xs text-white/35 leading-relaxed">{h.sub}</div>
+                <div className="text-xs text-white/70 leading-relaxed">{h.sub}</div>
               </div>
             </motion.div>
           ))}
@@ -425,7 +487,8 @@ const About=({setWarp})=>{
           ].map(x=>(
             <a key={x.l} href={x.h} target="_blank" rel="noreferrer"
               className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-xs tracking-[.1em] text-violet-300/65 hover:text-violet-200 transition-colors duration-300"
-              style={{border:"1px solid rgba(139,92,246,.2)"}}>
+              style={{border:"1px solid rgba(139,92,246,.2)"}}
+              aria-label={x.l === "dureadan.wahid@gmail.com" ? "Email Dur E Adan" : x.l === "LinkedIn" ? "Visit Dur E Adan on LinkedIn" : "Visit Dur E Adan on GitHub"}>
               <Icon name={x.icon} size={13} color="rgba(167,139,250,.7)"/>
               {x.l}
             </a>
@@ -461,7 +524,7 @@ const SkillRing=({label,pct,color,delay,inView})=>{
           <span className="fd font-700 text-xs text-white">{pct}%</span>
         </div>
       </div>
-      <span className="text-[10px] tracking-[.1em] uppercase text-center text-white/38 group-hover:text-white/65 transition-colors duration-300 max-w-[72px] leading-tight">{label}</span>
+      <span className="text-[10px] tracking-[.1em] uppercase text-center text-white/70 group-hover:text-white/85 transition-colors duration-300 max-w-[72px] leading-tight">{label}</span>
     </motion.div>
   );
 };
@@ -474,21 +537,27 @@ const SKILL_GROUPS=[
 
 const Skills=({setWarp})=>{
   const [ref,inView]=useReveal();
+  const [ambientRef,ambientInView]=useSectionVisibility(.1);
+  const prefersReducedMotion=useReducedMotion();
   const warpRef=useWarpOnEnter("Asteroid Belt",setWarp);
   return(
     <>
     <CockpitDivider from="Nebula Cloud" to="Asteroid Belt"/>
     <section id="skills" ref={warpRef} className="relative py-28 md:py-36 px-8 md:px-20 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        {Array.from({length:14},(_,i)=>{const sz=Math.random()*14+4;return(
-          <div key={i} className="absolute rounded-sm"
-            style={{width:sz,height:sz*(.5+Math.random()*.9),left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,
-              background:`rgba(96,${130+Math.random()*50|0},${200+Math.random()*50|0},${Math.random()*.22+.05})`,
-              border:"1px solid rgba(96,165,250,.1)",
-              animation:`ndrift ${8+Math.random()*8}s ease-in-out infinite`,animationDelay:`${Math.random()*5}s`,
-              filter:`blur(${Math.random()>.6?0:1}px)`,transform:`rotate(${Math.random()*360}deg)`}}/>
-        )})}
-        <div className="norb" style={{top:"20%",right:"-5%",width:400,height:400,"--nd":"15s",background:"radial-gradient(circle,rgba(29,78,216,.1) 0%,transparent 65%)"}}/>
+      <div ref={ambientRef} className="absolute inset-0 pointer-events-none">
+        {(ambientInView || !ambientRef.current) && (
+          <>
+            {Array.from({length:8},(_,i)=>{const sz=Math.random()*14+4;return(
+              <div key={i} className="absolute rounded-sm"
+                style={{width:sz,height:sz*(.5+Math.random()*.9),left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,
+                  background:`rgba(96,${130+Math.random()*50|0},${200+Math.random()*50|0},${Math.random()*.22+.05})`,
+                  border:"1px solid rgba(96,165,250,.1)",
+                  animation:prefersReducedMotion?"none":`ndrift ${8+Math.random()*8}s ease-in-out infinite`,animationDelay:`${Math.random()*5}s`,
+                  filter:`blur(${Math.random()>.6?0:1}px)`,transform:`rotate(${Math.random()*360}deg)`}}/>
+            )})}
+            <div className="norb" style={{top:"20%",right:"-5%",width:400,height:400,"--nd":"15s",background:"radial-gradient(circle,rgba(29,78,216,.1) 0%,transparent 65%)",animation:prefersReducedMotion?"none":"ndrift 15s ease-in-out infinite"}}/>
+          </>
+        )}
       </div>
       <div ref={ref} className="max-w-6xl mx-auto relative z-10">
         <SHead label="Asteroid Belt · Skills" line1="Tools of" accent="My Thinking" inView={inView}/>
@@ -509,10 +578,17 @@ const Skills=({setWarp})=>{
           ))}
         </div>
 
-        <motion.div variants={fU} custom={4} initial="h" animate={inView?"v":"h"} className="flex flex-wrap gap-2 mt-8">
-          {["Git","Figma","Postman","VS Code","Trello","Agile","Pygame","Fusion 360","JWT","Bcrypt"].map(t=>(
-            <span key={t} className="glass rounded-full px-3 py-1 text-[10px] tracking-[.12em] uppercase text-white/28" style={{border:"1px solid rgba(255,255,255,.06)"}}>{t}</span>
-          ))}
+        <motion.div variants={fU} custom={4} initial="h" animate={inView?"v":"h"} className="mt-8">
+          <div className="mb-3 flex items-center gap-3">
+            <div className="h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(96,165,250,.35),transparent)"}}/>
+            <span className="text-[10px] tracking-[.2em] uppercase text-white/70">Tools & Workflow</span>
+            <div className="h-px flex-1" style={{background:"linear-gradient(90deg,transparent,rgba(96,165,250,.35),transparent)"}}/>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {["Git","Figma","Postman","VS Code","Trello","Agile","Pygame","Fusion 360","JWT","Bcrypt"].map(t=>(
+              <span key={t} className="glass rounded-full px-3 py-1 text-[10px] tracking-[.12em] uppercase text-white/75" style={{border:"1px solid rgba(255,255,255,.06)"}}>{t}</span>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>
@@ -525,20 +601,41 @@ const Skills=({setWarp})=>{
 ═══════════════════════════════════════════════════════════════ */
 const PROJECTS=[
   {id:1,title:"Hexapod Robot Control",sub:"Getting a six-legged robot to walk on its own",tag:"Robotics · RL",year:"2024",
-    detail:"Simulated in ROS2 Humble. I wrote the IK solver for leg trajectories, then set up a Gymnasium environment and let Stable Baselines figure out how to actually walk. The pipeline talks end-to-end — nodes, topics, the whole thing.",
+    detail:"Simulated a full hexapod robot in ROS2 Humble, implemented inverse kinematics for precise leg trajectory control, and built a reinforcement learning pipeline using Gymnasium and Stable Baselines for autonomous locomotion.",
     impact:"Autonomous locomotion in simulation",
-    stack:["ROS2","Gymnasium","Stable Baselines","Python"],
+    stack:["ROS2 Humble","Gymnasium","Stable Baselines","Python"],
+    techStack:["ROS2 Humble","Gymnasium","Stable Baselines","Python"],
+    image:"/images/hexapod.svg",
+    githubUrl:"https://github.com/dureadansaeed/hexapod-robot-control",
+    demoUrl:"",
     icon:"arm",grad:"linear-gradient(135deg,rgba(109,40,217,.14),rgba(29,78,216,.07))",ac:"#a78bfa",size:"md:col-span-2"},
   {id:2,title:"Planora",sub:"An event planner people can actually use",tag:"Full Stack",year:"2024",
-    detail:"React frontend, Flask backend, MongoDB Atlas. Handled auth with JWT and Bcrypt, wired up Gmail SMTP for notifications, and validated every endpoint in Postman before calling it done. Ran the whole thing as a proper Agile project.",
+    detail:"Built a full-stack event planning platform with a React/Figma frontend, a RESTful Flask backend, and MongoDB Atlas, then added JWT auth, Bcrypt password hashing, Gmail SMTP notifications, and Postman-validated APIs.",
     impact:"Shipped — auth, notifications, the lot",
-    stack:["React","Flask","MongoDB","JWT"],
+    stack:["React","Flask","MongoDB","JWT","Bcrypt"],
+    techStack:["React","Flask","MongoDB","JWT","Bcrypt"],
+    image:"/images/planora.svg",
+    githubUrl:"https://github.com/dureadansaeed/planora",
+    demoUrl:"https://planora.example.com",
     icon:"calendar",grad:"linear-gradient(135deg,rgba(29,78,216,.14),rgba(6,182,212,.07))",ac:"#60a5fa",size:"md:col-span-1"},
   {id:3,title:"Blind Assist Bot",sub:"A car you control by tilting your hand",tag:"Robotics · ROS1",year:"2024",
     detail:"RC car driven by gyroscope readings from a sensor glove. ROS1 Noetic for all the plumbing — topics, action servers, the works. Tested and debugged live in Gazebo and Rviz until the motion felt smooth.",
     impact:"Real gesture → real robot motion",
-    stack:["ROS1","Gazebo","Rviz","Fusion 360"],
+    stack:["ROS1 Noetic","Python","OpenCV"],
+    techStack:["ROS1 Noetic","Python","OpenCV"],
+    image:"/images/blind-assist.svg",
+    githubUrl:"",
+    demoUrl:"",
     icon:"hand",grad:"linear-gradient(135deg,rgba(6,182,212,.12),rgba(29,78,216,.07))",ac:"#67e8f9",size:"md:col-span-1"},
+  {id:4,title:"Campus Companion AI",sub:"RAG-based document Q&A assistant built for student workflows",tag:"AI · RAG",year:"2025",
+    detail:"Built a Retrieval-Augmented Generation application for university PDFs with grounded answers, source citations, confidence scoring, summaries, and MCQ generation.",
+    impact:"Grounded answers over hallucinated ones",
+    stack:["Python","Streamlit","FAISS","Gemini API","Sentence-Transformers"],
+    techStack:["Python","Streamlit","FAISS","Gemini API","Sentence-Transformers"],
+    image:"/images/campus-companion.svg",
+    githubUrl:"https://github.com/dureadansaeed/campus-companion-ai",
+    demoUrl:"",
+    icon:"cpu",grad:"linear-gradient(135deg,rgba(139,92,246,.14),rgba(6,182,212,.08))",ac:"#a78bfa",size:"md:col-span-2"},
 ];
 
 const Projects=({setWarp})=>{
@@ -565,51 +662,97 @@ const Projects=({setWarp})=>{
         <div className="grid md:grid-cols-3 gap-4">
           {PROJECTS.map((p,i)=>(
             <motion.div key={p.id} custom={i} variants={fS} initial="h" animate={inView?"v":"h"}
-              className={`${p.size} glass2 rounded-2xl overflow-hidden cursor-pointer group transition-all duration-400`}
-              style={{border:active===p.id?`1px solid ${p.ac}55`:"1px solid rgba(255,255,255,.07)",background:p.grad}}
+              className={`${p.size} glass2 rounded-2xl overflow-hidden cursor-pointer group transition-all duration-400 relative`}
+              style={{border:active===p.id?`1px solid ${p.ac}55`:"1px solid rgba(255,255,255,.07)",background:p.grad,willChange:"transform"}}
               onClick={()=>setActive(active===p.id?null:p.id)}
+              onKeyDown={(e)=>{if(e.key==="Enter"||e.key === " "){e.preventDefault();setActive(active===p.id?null:p.id);}}}
+              role="button"
+              tabIndex={0}
+              aria-label={active===p.id?`Collapse ${p.title}`:`Expand ${p.title}`}
+              aria-expanded={active===p.id}
+              aria-controls={`project-panel-${p.id}`}
               whileHover={{scale:1.02}}>
-              <div className="p-6 md:p-7 h-full flex flex-col justify-between" style={{minHeight:220}}>
+              <div className="absolute inset-0 z-0">
+                <img
+                  src={p.image}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  width="1280"
+                  height="720"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="h-full w-full object-cover opacity-35"
+                  style={{willChange:"transform"}}
+                />
+                <div className="absolute inset-0" style={{background:"linear-gradient(180deg,rgba(3,8,20,.15) 0%,rgba(3,8,20,.55) 100%)"}} />
+              </div>
+              <div className="relative z-10 p-6 md:p-7 h-full flex flex-col justify-between" style={{minHeight:260}}>
                 <div>
-                  <div className="flex items-start justify-between mb-5">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)"}}>
                       <Icon name={p.icon} size={20} color={p.ac}/>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="glass rounded-full px-2.5 py-1 text-[9px] tracking-[.15em] uppercase" style={{color:"rgba(255,255,255,.3)",border:"1px solid rgba(255,255,255,.08)"}}>{p.tag}</span>
-                      <span className="text-[10px] text-white/20">{p.year}</span>
+                      <span className="glass rounded-full px-2.5 py-1 text-[9px] tracking-[.15em] uppercase" style={{color:"rgba(255,255,255,.75)",border:"1px solid rgba(255,255,255,.08)"}}>{p.tag}</span>
+                      <span className="text-[10px] text-white/70">{p.year}</span>
                     </div>
                   </div>
                   <h3 className="fd font-700 text-xl text-white mb-1.5 transition-all duration-300"
                     style={active===p.id?{background:`linear-gradient(90deg,${p.ac},#60a5fa)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}:{}}>
                     {p.title}
                   </h3>
-                  <p className="text-xs text-white/35 mb-4 leading-relaxed">{p.sub}</p>
+                  <p className="text-xs text-white/70 mb-3 leading-relaxed">{p.sub}</p>
                 </div>
 
-                <div>
-                  <div className="inline-flex items-center gap-2 glass rounded-full px-3 py-1.5 mb-3" style={{border:`1px solid ${p.ac}33`}}>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {p.techStack.slice(0,4).map(t=>(
+                    <span key={t} className="glass rounded-full px-2 py-0.5 text-[9px] tracking-wider uppercase text-white/75">{t}</span>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="inline-flex items-center gap-2 glass rounded-full px-3 py-1.5" style={{border:`1px solid ${p.ac}33`}}>
                     <div className="w-1 h-1 rounded-full" style={{background:p.ac,boxShadow:`0 0 4px ${p.ac}`}}/>
-                    <span className="text-[10px] text-white/50">{p.impact}</span>
+                    <span className="text-[10px] text-white/75">{p.impact}</span>
                   </div>
-
-                  <AnimatePresence>
-                    {active===p.id&&(
-                      <motion.div initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}} transition={{duration:.35,ease:[.25,.46,.45,.94]}} className="overflow-hidden">
-                        <p className="text-xs text-white/40 leading-relaxed mb-3 pt-1">{p.detail}</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {p.stack.map(t=>(
-                            <span key={t} className="glass rounded px-2 py-0.5 text-[9px] tracking-wider uppercase text-white/28">{t}</span>
-                          ))}
-                        </div>
-                      </motion.div>
+                  <div className="flex items-center gap-2 relative z-20">
+                    {p.githubUrl ? (
+                      <a href={p.githubUrl} target="_blank" rel="noreferrer" aria-label={`View GitHub repository for ${p.title}`} className="glass rounded-full p-2 text-white/80 hover:text-white/90 transition-colors duration-300" onClick={(e)=>e.stopPropagation()}>
+                        <Icon name="github" size={14} color="rgba(255,255,255,.7)"/>
+                      </a>
+                    ) : (
+                      <span aria-label={`GitHub unavailable for ${p.title}`} className="glass rounded-full p-2 text-white/70" title="GitHub unavailable">
+                        <Icon name="github" size={14} color="rgba(255,255,255,.25)"/>
+                      </span>
                     )}
-                  </AnimatePresence>
-
-                  <motion.div animate={{rotate:active===p.id?45:0}} transition={{duration:.3}}
-                    className="mt-3 w-6 h-6 rounded-full flex items-center justify-center text-sm text-white/25"
-                    style={{border:"1px solid rgba(255,255,255,.1)"}}>+</motion.div>
+                    {p.demoUrl ? (
+                      <a href={p.demoUrl} target="_blank" rel="noreferrer" aria-label={`View live demo for ${p.title}`} className="glass rounded-full p-2 text-white/80 hover:text-white/90 transition-colors duration-300" onClick={(e)=>e.stopPropagation()}>
+                        <Icon name="link" size={14} color="rgba(255,255,255,.7)"/>
+                      </a>
+                    ) : (
+                      <span aria-label={`Live demo unavailable for ${p.title}`} className="glass rounded-full p-2 text-white/70" title="Live demo unavailable">
+                        <Icon name="link" size={14} color="rgba(255,255,255,.25)"/>
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                <AnimatePresence>
+                  {active===p.id&&(
+                    <motion.div id={`project-panel-${p.id}`} initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}} transition={{duration:.35,ease:[.25,.46,.45,.94]}} className="overflow-hidden">
+                      <p className="text-xs text-white/70 leading-relaxed mb-3 pt-1">{p.detail}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.stack.map(t=>(
+                          <span key={t} className="glass rounded px-2 py-0.5 text-[9px] tracking-wider uppercase text-white/75">{t}</span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.div animate={{rotate:active===p.id?45:0}} transition={{duration:.3}}
+                  className="mt-3 w-6 h-6 rounded-full flex items-center justify-center text-sm text-white/75"
+                  style={{border:"1px solid rgba(255,255,255,.1)"}}>+</motion.div>
               </div>
             </motion.div>
           ))}
@@ -637,27 +780,35 @@ const TIMELINE=[
 
 const Journey=({setWarp})=>{
   const [ref,inView]=useReveal();
+  const [ambientRef,ambientInView]=useSectionVisibility(.1);
+  const prefersReducedMotion=useReducedMotion();
   const warpRef=useWarpOnEnter("Star System",setWarp);
   return(
     <>
     <CockpitDivider from="Planet Station" to="Star System"/>
     <section id="journey" ref={warpRef} className="relative py-28 md:py-36 px-8 md:px-20 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="norb" style={{top:"10%",left:"0%",width:450,height:450,"--nd":"20s",background:"radial-gradient(circle,rgba(96,165,250,.09) 0%,transparent 65%)"}}/>
-        <div className="norb" style={{bottom:"5%",right:"0%",width:380,height:380,"--nd":"16s","--ndl":"5s",background:"radial-gradient(circle,rgba(109,40,217,.09) 0%,transparent 65%)"}}/>
-        {Array.from({length:30},(_,i)=>(
-          <div key={i} className="absolute rounded-full" style={{left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,width:Math.random()*2+.4,height:Math.random()*2+.4,background:"rgba(220,220,255,1)",opacity:Math.random()*.4+.1,animation:`twinkle ${Math.random()*3+2}s ease-in-out infinite`,animationDelay:`${Math.random()*4}s`}}/>
-        ))}
+      <div ref={ambientRef} className="absolute inset-0 pointer-events-none">
+        {(ambientInView || !ambientRef.current) && (
+          <>
+            <div className="norb" style={{top:"10%",left:"0%",width:450,height:450,"--nd":"20s",background:"radial-gradient(circle,rgba(96,165,250,.09) 0%,transparent 65%)",animation:prefersReducedMotion?"none":"ndrift 20s ease-in-out infinite"}}/>
+            <div className="norb" style={{bottom:"5%",right:"0%",width:380,height:380,"--nd":"16s","--ndl":"5s",background:"radial-gradient(circle,rgba(109,40,217,.09) 0%,transparent 65%)",animation:prefersReducedMotion?"none":"ndrift 16s ease-in-out infinite"}}/>
+            {Array.from({length:10},(_,i)=>(
+              <div key={i} className="absolute rounded-full" style={{left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,width:Math.random()*2+.4,height:Math.random()*2+.4,background:"rgba(220,220,255,1)",opacity:Math.random()*.4+.1,animation:prefersReducedMotion?"none":`twinkle ${Math.random()*3+2}s ease-in-out infinite`,animationDelay:`${Math.random()*4}s`}}/>
+            ))}
+          </>
+        )}
       </div>
       <div ref={ref} className="max-w-5xl mx-auto relative z-10">
         <SHead label="Star System · Journey" line1="The Journey" accent="So Far" inView={inView}/>
 
-        <div className="space-y-4">
+        <div className="relative space-y-4 pl-8 md:pl-10">
+          <div className="absolute left-3.5 top-2 bottom-2 w-px" style={{background:"linear-gradient(180deg,rgba(167,139,250,.95),rgba(96,165,250,.55),transparent)"}} />
           {TIMELINE.map((item,i)=>(
             <motion.div key={i} custom={i} variants={fU} initial="h" animate={inView?"v":"h"}
               whileHover={{scale:1.015}}
-              className="glass2 rounded-2xl p-5 md:p-6 flex items-center gap-5 transition-all duration-300"
+              className="relative glass2 rounded-2xl p-5 md:p-6 flex items-center gap-5 transition-all duration-300"
               style={{border:"1px solid rgba(255,255,255,.07)"}}>
+              <div className="absolute left-[-1.5rem] top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border border-violet-400/70" style={{background:"radial-gradient(circle,rgba(167,139,250,.95),rgba(96,165,250,.2))",boxShadow:"0 0 10px rgba(139,92,246,.35)"}} />
               <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.2)"}}>
                 <Icon name={item.icon} size={18} color="#a78bfa"/>
@@ -665,10 +816,10 @@ const Journey=({setWarp})=>{
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-1">
                   <h3 className="fd font-700 text-base text-white">{item.role}</h3>
-                  <span className="text-[10px] tracking-[.15em] uppercase text-violet-400/50 flex-shrink-0">{item.year}</span>
+                  <span className="text-[10px] tracking-[.15em] uppercase text-violet-400/70 flex-shrink-0">{item.year}</span>
                 </div>
-                <div className="text-xs text-white/30 mb-2 tracking-wide">{item.place}</div>
-                <p className="text-xs text-white/38 leading-relaxed">{item.note}</p>
+                <div className="text-xs text-white/70 mb-2 tracking-wide">{item.place}</div>
+                <p className="text-xs text-white/70 leading-relaxed">{item.note}</p>
               </div>
             </motion.div>
           ))}
@@ -681,7 +832,7 @@ const Journey=({setWarp})=>{
           ].map((c,i)=>(
             <div key={c.text} className="glass rounded-xl px-4 py-3.5 flex items-center gap-3" style={{border:"1px solid rgba(139,92,246,.15)"}}>
               <Icon name={c.icon} size={14} color="rgba(167,139,250,.7)"/>
-              <span className="text-xs text-white/45">{c.text}</span>
+              <span className="text-xs text-white/70">{c.text}</span>
             </div>
           ))}
         </motion.div>
@@ -703,22 +854,26 @@ const PHILO=[
 
 const Philosophy=({setWarp})=>{
   const [ref,inView]=useReveal();
+  const [ambientRef,ambientInView]=useSectionVisibility(.1);
+  const prefersReducedMotion=useReducedMotion();
   const warpRef=useWarpOnEnter("Black Hole",setWarp);
   return(
     <>
     <CockpitDivider from="Star System" to="Black Hole"/>
     <section id="philo" ref={warpRef} className="relative py-28 md:py-36 px-8 md:px-20 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
-        <div className="relative opacity-[.13]" style={{width:600,height:600}}>
-          {[90,150,210,270,340].map((r,i)=>(
-            <div key={r} className="absolute rounded-full"
-              style={{width:r*2,height:r*2,top:"50%",left:"50%",marginLeft:-r,marginTop:-r,
-                border:`${i<2?2:1}px solid rgba(${i%2===0?139:96},${i%2===0?92:165},250,.${7-i})`,
-                animation:`bh-rotate ${7+i*4}s linear infinite ${i%2===0?"":"reverse"}`}}/>
-          ))}
-          <div className="absolute rounded-full" style={{width:160,height:160,top:"50%",left:"50%",marginLeft:-80,marginTop:-80,
-            background:"radial-gradient(circle,#000 45%,rgba(109,40,217,.3) 70%,transparent)",boxShadow:"0 0 70px rgba(109,40,217,.5)"}}/>
-        </div>
+      <div ref={ambientRef} className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
+        {(ambientInView || !ambientRef.current) && (
+          <div className="relative opacity-[.13]" style={{width:600,height:600}}>
+            {[90,150,210,270,340].map((r,i)=>(
+              <div key={r} className="absolute rounded-full"
+                style={{width:r*2,height:r*2,top:"50%",left:"50%",marginLeft:-r,marginTop:-r,
+                  border:`${i<2?2:1}px solid rgba(${i%2===0?139:96},${i%2===0?92:165},250,.${7-i})`,
+                  animation:prefersReducedMotion?"none":`bh-rotate ${7+i*4}s linear infinite ${i%2===0?"":"reverse"}`}}/>
+            ))}
+            <div className="absolute rounded-full" style={{width:160,height:160,top:"50%",left:"50%",marginLeft:-80,marginTop:-80,
+              background:"radial-gradient(circle,#000 45%,rgba(109,40,217,.3) 70%,transparent)",boxShadow:"0 0 70px rgba(109,40,217,.5)"}}/>
+          </div>
+        )}
       </div>
       <div ref={ref} className="max-w-6xl mx-auto relative z-10">
         <SHead label="Black Hole · Principles" line1="How I Think" accent="About AI" inView={inView}/>
@@ -735,7 +890,7 @@ const Philosophy=({setWarp})=>{
                 <Icon name={p.icon} size={16} color="rgba(167,139,250,.55)" className="group-hover:text-violet-300"/>
               </div>
               <h3 className="fd font-700 text-sm text-white mb-2">{p.title}</h3>
-              <p className="text-xs leading-relaxed text-white/30 group-hover:text-white/55 transition-colors duration-400">{p.body}</p>
+              <p className="text-xs leading-relaxed text-white/70 group-hover:text-white/85 transition-colors duration-400">{p.body}</p>
             </motion.div>
           ))}
         </div>
@@ -743,7 +898,7 @@ const Philosophy=({setWarp})=>{
           className="glass2 rounded-2xl p-8 md:p-12 text-center relative overflow-hidden"
           style={{border:"1px solid rgba(139,92,246,.12)"}}>
           <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at center,rgba(109,40,217,.09),transparent 65%)"}}/>
-          <blockquote className="fd font-700 leading-relaxed max-w-2xl mx-auto text-white/45 relative z-10"
+          <blockquote className="fd font-700 leading-relaxed max-w-2xl mx-auto text-white/75 relative z-10"
             style={{fontSize:"clamp(1rem,2.2vw,1.4rem)"}}>
             "I don't just run experiments —{" "}
             <span className="gt">I build things that have to actually work.</span>"
@@ -760,14 +915,20 @@ const Philosophy=({setWarp})=>{
 ═══════════════════════════════════════════════════════════════ */
 const Contact=({setWarp})=>{
   const [ref,inView]=useReveal();
+  const [ambientRef,ambientInView]=useSectionVisibility(.1);
+  const prefersReducedMotion=useReducedMotion();
   const warpRef=useWarpOnEnter("Home Base",setWarp);
   return(
     <>
     <CockpitDivider from="Black Hole" to="Home Base"/>
     <section id="contact" ref={warpRef} className="relative py-28 md:py-40 px-8 md:px-20 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="norb" style={{bottom:"-18%",left:"50%",marginLeft:-430,width:860,height:860,"--nd":"22s",background:"radial-gradient(circle,rgba(29,78,216,.2) 0%,rgba(6,182,212,.05) 50%,transparent 70%)"}}/>
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2" style={{width:1000,height:250,filter:"blur(50px)",background:"radial-gradient(ellipse at bottom,rgba(29,78,216,.16),rgba(6,182,212,.04),transparent)"}}/>
+      <div ref={ambientRef} className="absolute inset-0 pointer-events-none">
+        {(ambientInView || !ambientRef.current) && (
+          <>
+            <div className="norb" style={{bottom:"-18%",left:"50%",marginLeft:-430,width:860,height:860,"--nd":"22s",background:"radial-gradient(circle,rgba(29,78,216,.2) 0%,rgba(6,182,212,.05) 50%,transparent 70%)",animation:prefersReducedMotion?"none":"ndrift 22s ease-in-out infinite"}}/>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2" style={{width:1000,height:250,filter:"blur(50px)",background:"radial-gradient(ellipse at bottom,rgba(29,78,216,.16),rgba(6,182,212,.04),transparent)"}}/>
+          </>
+        )}
       </div>
       <div ref={ref} className="max-w-4xl mx-auto text-center relative z-10">
         <motion.div custom={0} variants={fU} initial="h" animate={inView?"v":"h"}><SLabel text="Home Base · Contact"/></motion.div>
@@ -778,11 +939,33 @@ const Contact=({setWarp})=>{
         </motion.h2>
 
         <motion.p custom={2} variants={fU} initial="h" animate={inView?"v":"h"}
-          className="text-sm md:text-base leading-relaxed mb-10 max-w-sm mx-auto font-light" style={{color:"rgba(255,255,255,.3)"}}>
+          className="text-sm md:text-base leading-relaxed mb-10 max-w-sm mx-auto font-light" style={{color:"rgba(255,255,255,.72)"}}>
           If you're working on something interesting, I'd like to hear about it. Roles, collabs, or just a good problem to think through.
         </motion.p>
 
-        <motion.div custom={3} variants={fU} initial="h" animate={inView?"v":"h"} className="grid sm:grid-cols-3 gap-3 mb-10 max-w-xl mx-auto">
+        <motion.div custom={3} variants={fU} initial="h" animate={inView?"v":"h"}
+          className="glass2 rounded-2xl p-6 md:p-8 mb-8 max-w-2xl mx-auto"
+          style={{border:"1px solid rgba(255,255,255,.07)"}}>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-left">
+              <div className="fd font-700 text-base text-white mb-2">Share Your Feedback</div>
+              <p className="text-sm leading-relaxed" style={{color:"rgba(255,255,255,.72)"}}>
+                Suggestions, issue reports, and constructive feedback are always welcome. I’d love to hear what stood out and what could be improved.
+              </p>
+            </div>
+            <a
+              href="mailto:dureadan.wahid@gmail.com?subject=Portfolio%20Feedback&body=Hello%20Dur%20E%20Adan%2C%0A%0AI%20visited%20your%20portfolio%20and%20would%20like%20to%20share%20the%20following%20feedback%3A%0A%0A-------------------------------------------------%0A"
+              className="inline-flex items-center gap-3 px-6 py-3.5 text-sm tracking-[.15em] uppercase font-medium text-white rounded-xl transition-all duration-300"
+              style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}
+              aria-label="Send feedback via email"
+            >
+              <Icon name="mail" size={15} color="rgba(255,255,255,.8)"/>
+              <span>Send Feedback</span>
+            </a>
+          </div>
+        </motion.div>
+
+        <motion.div custom={4} variants={fU} initial="h" animate={inView?"v":"h"} className="grid sm:grid-cols-3 gap-3 mb-10 max-w-xl mx-auto">
           {[
             {icon:"mail",    label:"Email",    val:"dureadan.wahid@gmail.com", href:"mailto:dureadan.wahid@gmail.com"},
             {icon:"linkedin",label:"LinkedIn", val:"dur-e-adan",               href:"https://linkedin.com/in/dur-e-adan-b3598a32b"},
@@ -791,26 +974,56 @@ const Contact=({setWarp})=>{
             <motion.a key={c.label} href={c.href} target="_blank" rel="noreferrer"
               whileHover={{scale:1.05,borderColor:"rgba(139,92,246,.4)"}}
               className="glass2 rounded-2xl p-5 flex flex-col items-center gap-3 transition-all duration-300"
-              style={{border:"1px solid rgba(255,255,255,.07)"}}>
+              style={{border:"1px solid rgba(255,255,255,.07)"}}
+              aria-label={c.label === "Email" ? "Email Dur E Adan" : c.label === "LinkedIn" ? "Visit Dur E Adan on LinkedIn" : "Visit Dur E Adan on GitHub"}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.18)"}}>
                 <Icon name={c.icon} size={17} color="#a78bfa"/>
               </div>
-              <span className="fd font-600 text-xs text-white/55 tracking-wide">{c.label}</span>
-              <span className="text-[10px] text-white/25 text-center break-all">{c.val}</span>
+              <span className="fd font-600 text-xs text-white/80 tracking-wide">{c.label}</span>
+              <span className="text-[10px] text-white/75 text-center break-all">{c.val}</span>
             </motion.a>
           ))}
         </motion.div>
 
-        <motion.a custom={4} variants={fU} initial="h" animate={inView?"v":"h"}
-          href="mailto:dureadan.wahid@gmail.com"
-          className="inline-flex items-center gap-3 px-8 py-4 text-sm tracking-[.15em] uppercase font-medium text-white rounded-xl transition-all duration-300"
-          style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}
-          onMouseEnter={e=>e.currentTarget.style.boxShadow="0 0 50px rgba(96,165,250,.25)"}
-          onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>
-          <Icon name="mail" size={15} color="rgba(255,255,255,.8)"/>
-          <span>Open Comms</span>
-          <motion.span animate={{x:[0,5,0]}} transition={{repeat:Infinity,duration:2}}>→</motion.span>
-        </motion.a>
+        <motion.div custom={4} variants={fU} initial="h" animate={inView?"v":"h"} className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <motion.a
+            href="mailto:dureadan.wahid@gmail.com"
+            className="inline-flex items-center gap-3 px-8 py-4 text-sm tracking-[.15em] uppercase font-medium text-white rounded-xl transition-all duration-300"
+            style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}
+            onMouseEnter={e=>e.currentTarget.style.boxShadow="0 0 50px rgba(96,165,250,.25)"}
+            onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}
+            aria-label="Email Dur E Adan"
+          >
+            <Icon name="mail" size={15} color="rgba(255,255,255,.8)"/>
+            <span>Open Comms</span>
+            <motion.span animate={{x:[0,5,0]}} transition={{repeat:Infinity,duration:2}}>→</motion.span>
+          </motion.a>
+          <motion.a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 px-8 py-4 text-sm tracking-[.15em] uppercase font-medium text-white rounded-xl transition-all duration-300"
+            style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}
+            onMouseEnter={e=>e.currentTarget.style.boxShadow="0 0 50px rgba(96,165,250,.25)"}
+            onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}
+            aria-label="View resume in new tab"
+          >
+            <Icon name="briefcase" size={15} color="rgba(255,255,255,.8)"/>
+            <span>View Resume</span>
+          </motion.a>
+          <motion.a
+            href="/resume.pdf"
+            download="resume.pdf"
+            className="inline-flex items-center gap-3 px-8 py-4 text-sm tracking-[.15em] uppercase font-medium text-white rounded-xl transition-all duration-300"
+            style={{background:"linear-gradient(135deg,rgba(29,78,216,.6),rgba(6,182,212,.45))",border:"1px solid rgba(96,165,250,.28)",backdropFilter:"blur(24px)"}}
+            onMouseEnter={e=>e.currentTarget.style.boxShadow="0 0 50px rgba(96,165,250,.25)"}
+            onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}
+            aria-label="Download resume PDF"
+          >
+            <Icon name="download" size={15} color="rgba(255,255,255,.8)"/>
+            <span>Download Resume</span>
+          </motion.a>
+        </motion.div>
       </div>
     </section>
     </>
@@ -821,13 +1034,13 @@ const Contact=({setWarp})=>{
    NAV
 ═══════════════════════════════════════════════════════════════ */
 const NAV=[
-  {label:"Deep Space",href:"#hero",    dot:"rgba(167,139,250,1)"},
-  {label:"Nebula",    href:"#about",   dot:"rgba(139,92,246,1)" },
-  {label:"Asteroid",  href:"#skills",  dot:"rgba(96,165,250,1)" },
-  {label:"Station",   href:"#work",    dot:"rgba(103,232,249,1)"},
-  {label:"Star Sys.", href:"#journey", dot:"rgba(167,139,250,1)"},
-  {label:"Black Hole",href:"#philo",   dot:"rgba(192,132,252,1)"},
-  {label:"Home Base", href:"#contact", dot:"rgba(96,165,250,1)" },
+  {label:"Deep Space",href:"#hero",    dot:"rgba(167,139,250,1)",cue:"Intro"},
+  {label:"Nebula",    href:"#about",   dot:"rgba(139,92,246,1)" ,cue:"About"},
+  {label:"Asteroid",  href:"#skills",  dot:"rgba(96,165,250,1)" ,cue:"Skills"},
+  {label:"Station",   href:"#work",    dot:"rgba(103,232,249,1)",cue:"Projects"},
+  {label:"Star Sys.", href:"#journey", dot:"rgba(167,139,250,1)",cue:"Journey"},
+  {label:"Black Hole",href:"#philo",   dot:"rgba(192,132,252,1)",cue:"Philosophy"},
+  {label:"Home Base", href:"#contact", dot:"rgba(96,165,250,1)" ,cue:"Contact"},
 ];
 const Nav=()=>{
   const [scrolled,setScrolled]=useState(false);
@@ -843,10 +1056,13 @@ const Nav=()=>{
       </div>
       <div className="hidden lg:flex gap-6">
         {NAV.map(n=>(
-          <a key={n.label} href={n.href}
-            className="group flex items-center gap-1.5 text-[10px] tracking-[.18em] uppercase text-white/22 hover:text-white/75 transition-colors duration-300">
+          <a key={n.label} href={n.href} aria-label={`${n.label} — ${n.cue}`}
+            className="group flex items-center gap-1.5 text-[10px] tracking-[.18em] uppercase text-white/70 hover:text-white/90 transition-colors duration-300">
             <div className="w-1 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background:n.dot,boxShadow:`0 0 4px ${n.dot}`}}/>
-            {n.label}
+            <span className="flex flex-col items-start leading-none">
+              <span>{n.label}</span>
+              <span className="mt-1 text-[8px] tracking-[.2em] uppercase text-white/45">{n.cue}</span>
+            </span>
           </a>
         ))}
       </div>
@@ -866,9 +1082,9 @@ const Nav=()=>{
 ═══════════════════════════════════════════════════════════════ */
 const Footer=()=>(
   <footer className="px-8 md:px-20 py-7 flex flex-col md:flex-row items-center justify-between gap-3" style={{borderTop:"1px solid rgba(255,255,255,.03)"}}>
-    <span className="text-[10px] tracking-[.2em] uppercase text-white/10">© 2025 Dur E Adan · Islamabad, Pakistan</span>
-    <div className="flex items-center gap-2 text-[10px] tracking-[.2em] uppercase text-white/10">
-      <span>Mission Log</span><span style={{color:"rgba(139,92,246,.35)"}}>·</span><span>7 Worlds Visited</span>
+    <span className="text-[10px] tracking-[.2em] uppercase text-white/70">© 2025 Dur E Adan · Islamabad, Pakistan</span>
+    <div className="flex items-center gap-2 text-[10px] tracking-[.2em] uppercase text-white/70">
+      <span>Mission Log</span><span style={{color:"rgba(139,92,246,.5)"}}>·</span><span>7 Worlds Visited</span>
     </div>
   </footer>
 );
@@ -884,15 +1100,18 @@ export default function Portfolio(){
       <StarField/>
       <CursorGlow/>
       <WarpTransition active={!!warpDest} destination={warpDest}/>
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <Nav/>
-      <Hero setWarp={setWarpDest}/>
-      <About setWarp={setWarpDest}/>
-      <Skills setWarp={setWarpDest}/>
-      <Projects setWarp={setWarpDest}/>
-      <Journey setWarp={setWarpDest}/>
-      <Philosophy setWarp={setWarpDest}/>
-      <Contact setWarp={setWarpDest}/>
-      <Footer/>
+      <main id="main-content" tabIndex="-1">
+        <Hero setWarp={setWarpDest}/>
+        <About setWarp={setWarpDest}/>
+        <Skills setWarp={setWarpDest}/>
+        <Projects setWarp={setWarpDest}/>
+        <Journey setWarp={setWarpDest}/>
+        <Philosophy setWarp={setWarpDest}/>
+        <Contact setWarp={setWarpDest}/>
+        <Footer/>
+      </main>
     </div>
   );
 }
